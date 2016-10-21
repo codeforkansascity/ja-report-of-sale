@@ -2,6 +2,8 @@ import PyPDF2
 import re
 import requests
 import json
+import csv
+
 
 def cleannone(val):
     if val is None:
@@ -23,9 +25,16 @@ amountsPattern = re.compile(r'([\({][0-9\.,\$]+[\)}])')
 
 parcelPattern = re.compile(r'PARCEL NUMBER: ([K0123456789-]*) LEGAL DESCRIPTION: (.+)(\d{2}-\d{3}-\d{2}-\d{2}-\d{2}-\d{1}-\d{2}-\d{3}) .+ judgment and (.+), being the highest.+to the said (.+),\s+at\s+said')
 
+output_csv = open('K2012 Report of Sale.csv', 'w')
+
+csv_writer = csv.writer(output_csv, dialect='excel')
+
+header = {'Parcel Number', 'Legal Description', 'APN', 'PDF Name Address', 'PDF Name', 'PDF Address'}
 
 
-for i in range(2, 100):
+csv_writer.writerows( [header] )
+
+for i in range(2, 387):
     pageObj = pdfReader.getPage(i)
 
     text =  pageObj.extractText() 
@@ -37,7 +46,7 @@ for i in range(2, 100):
     # PARCEL NUMBER: K2012-01030
 
     ret = parcelPattern.search( text ).groups()
-
+    print ( ret) 
 #    amts = amountsPattern.search( text ).groups()
 
 #    print ( amts )
@@ -46,23 +55,25 @@ for i in range(2, 100):
     name_and_address = ret[3]
     name = ret[4]
 
+
     searchString = name + ', (.+)'
 
     addressPattern = re.compile(searchString)
 
     address = addressPattern.search( name_and_address ).groups(0)
 
-    # print ( '|' + address[0] + '|' )
+    print ( '|' + address[0] + '|' )
 
     ret = list( ret )
 
-    ret.append(address)
+    ret.append(address[0])
 
     # print ( ret )
 
     # ['K2012-01048', 'SECTION 35 TWNSHP 50 RANGE 33 BEG 501 FT N OF NE COR OF ST JOHN AVE & DENVER AVE, THS 33 FT, TH E 135 FT, TH N 33 FT, TH W TO BEG ', '13-810-25-05-00-0-00-000', 'RIGHTEOUS PROPERTIES, LLC, 6324 N CHATHAM AVE, #327 KANSAS CITY, MO 64151', 'RIGHTEOUS PROPERTIES, LLC', ('6324 N CHATHAM AVE, #327 KANSAS CITY, MO 64151',)]
 
     data = {'Parcel Number': ret[0], 'Legal Description': ret[1], 'APN': ret[2], 'PDF Name Address': ret[3], 'PDF Name': ret[4], 'PDF Address': ret[5] }
+    csv_writer.writerows( [ ret ]  )
 
     parcel_number = 'JA' + ret[2].replace("-", "")
 
