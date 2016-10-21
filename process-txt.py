@@ -27,11 +27,12 @@ with open(myfile, newline='') as csvfile:
             print("\n")
             for key in jData['data']:
                 if  ( type( key ) is str ):
-                    if  (type( jData['data'][key] ) is not None ):
-                        print (key + " : " + jData['data'][key])
-                    else:
+                    value = jData['data'][key]
+                    print ( value )
                         print ('BAD' + key + ' data is ')
                         print ( type( jData['data'][key] ) )
+                    else:
+                        print (key + " : " + value )
                 else:
                     print (key + ' is not a string')
         else:
