@@ -4,37 +4,58 @@ import json
 
 csv.register_dialect('piper', delimiter='|', quoting=csv.QUOTE_NONE,lineterminator='\n')
 
+output_csv = open('new.csv', 'w')
+csv_writer = csv.writer(output_csv, dialect='excel')
+
+
+def cleannone(val):
+    if val is None:
+        val = '';
+    return val
+
+def address_api( p ):
+
+    parcel_number = 'JA' + p.replace("-", "")
+
+    # http://dev-api.codeforkc.org//address-attributes/V0/10001%20N%20CHERRY%20DR%2C?city=Kansas%20City&state=mojj
+
+    url = 'http://dev-api.codeforkc.org/address-attributes-county-id/V0/' + parcel_number + '?city=Kansas%20City&state=MO'
+
+    myResponse = requests.get(url)
+
+    single_line_address = ''
+    county_situs_address = ''
+    longitude = ''
+    latitude = ''
+
+    # For successful API call, response code will be 200 (OK)
+    if(myResponse.ok):
+
+        # Loading the response data into a dict variable
+        # json.loads takes in only binary or string variables so using content to fetch binary content
+        # Loads (Load String) takes a Json file and converts into python data structure (dict or list, depending on JSON)
+
+        jData = json.loads(myResponse.content.decode('utf-8'))
+
+        address_api_data = jData['data']
+        
+        single_line_address = cleannone(address_api_data['single_line_address'])
+        county_situs_address = cleannone(address_api_data['county_situs_address'])
+        longitude = address_api_data['longitude']
+        latitude = address_api_data['latitude']
+
+        return single_line_address
+
 myfile = 'K2016Pub.txt'
+
+
 
 with open(myfile, newline='') as csvfile:
     for row in csv.DictReader(csvfile, dialect='piper'):
         print (row)
-        parcel_number = 'JA' + row['parcel_number'].replace("-", "")
-        print (parcel_number)
-        url = 'http://dev-api.codeforkc.devel/address-attributes-county-id/V0/' + parcel_number + '?city=Kansas%20City&state=MO'
+        single_line_address = address_api ( row['parcel_number']  )
 
-        myResponse = requests.get(url)
-        print (myResponse.status_code)
+        row = list( row )
+        row.append( single_line_address )
 
-        # For successful API call, response code will be 200 (OK)
-        if(myResponse.ok):
-
-            # Loading the response data into a dict variable
-            # json.loads takes in only binary or string variables so using content to fetch binary content
-            # Loads (Load String) takes a Json file and converts into python data structure (dict or list, depending on JSON)
-            jData = json.loads(myResponse.content.decode('utf-8'))
-            print("The response contains {0} properties".format(len(jData)))
-            print("\n")
-            for key in jData['data']:
-                if  ( type( key ) is str ):
-                    value = jData['data'][key]
-                    print ( value )
-                        print ('BAD' + key + ' data is ')
-                        print ( type( jData['data'][key] ) )
-                    else:
-                        print (key + " : " + value )
-                else:
-                    print (key + ' is not a string')
-        else:
-            # If response code is not ok (200), print the resulting http error code with description
-            myResponse.raise_for_status()
+        csv_writer.writerows( [ row ]  )
