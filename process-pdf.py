@@ -25,7 +25,7 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page, date
     if pdfReader.numPages < pdf_end_page:
         pdf_end_page = pdfReader.numPages
     
-    parcelPattern = re.compile(r'PARCEL NUMBER: ([K0123456789-]*) LEGAL DESCRIPTION: (.+)(\d{2}-\d{3}-\d{2}-\d{2}-\d{2}-\d{1}-\d{2}-\d{3}) .+ judgment and (.+), being the highest.+to the said (.+),\s+at\s+said')
+    parcelPattern = re.compile(r'PARCEL NUMBER: ([K0123456789-]*) LEGAL DESCRIPTION: (.+)(\d{2}-\d{3}-\d{2}-\d{2}-\d{2}-\d{1}-\d{2}-\d{3}) .+ judgment and (.+), being the highest.+to the said (.+),\s+at')
 
     header = ['Parcel Number', 'Legal Description', 'APN', 'Owner Name Address', 'Date Sold', 'longitude', 'latitude', 'Situs Address','URL', 'Source', 'Page No.']
     
