@@ -33,12 +33,17 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page, date
     
     for i in range(pdf_start_page, pdf_end_page):
         pageObj = pdfReader.getPage(i)
+        page_number = i
     
         text =  pageObj.extractText() 
     
         text =  text.replace(chr(10),' ') 
 
         ret = parcelPattern.search( text )
+
+        longitude = ''
+        latitude = ''
+        single_line_address = ''
     
         if ret is not None:
             ret = ret.groups()
@@ -48,19 +53,13 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page, date
 
             ret.append ( date_sold );
 
-            longitude = ''
-            latitude = ''
-            single_line_address = ''
+#           api_info = address_api ( ret[2] )
 
-            api_info = address_api ( ret[2] )
-
-
-
-            if api_info is not None:
-                api_info = list( api_info )
-                longitude = api_info[0]
-                latitude = api_info[1]
-                single_line_address = api_info[2]
+#            if api_info is not None:
+#                api_info = list( api_info )
+#                longitude = api_info[0]
+#                latitude = api_info[1]
+#                single_line_address = api_info[2]
 
             ret.append( longitude )
             ret.append( latitude )
@@ -69,14 +68,16 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page, date
             ret.append( 'http://maps.jacksongov.org/PropertyReport/propertyReport.cfm?pid=' + ret[2] )
 
             ret.append( pdf_file_name )
-           
-            page_number = i
 
             ret.append( page_number )
 
             csv_writer.writerows( [ ret ]  )
+        else:
+            print ('Could not process page ')
+            print ( page_number)
 
-    print ( 'Last page processed ' + i )
+    print ( 'Last page processed ')
+    print ( i );
 
 def address_api( p ):
 
