@@ -10,7 +10,7 @@ def cleannone(val):
         val = '';
     return val
 
-def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page, date_sold ):
+def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page ):
     pdf_file_name = pdf_file_path + pdf_base_name + '.pdf'
 
     print ( 'Processing ' + pdf_file_name )
@@ -26,9 +26,9 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page, date
     if pdfReader.numPages < pdf_end_page:
         pdf_end_page = pdfReader.numPages
     
-    parcelPattern = re.compile(r'PARCEL NUMBER: ([K0123456789-]*) LEGAL DESCRIPTION: (.+)(\d{2}-.+-.+-.+-.+-.+-.+-.+) judgment and (.+), being the highest.+to the said (.+),\s+at')
+    parcelPattern = re.compile(r'on (.+), real.+PARCEL NUMBER: ([K0123456789-]*) LEGAL DESCRIPTION: (.+)(\d{2}-.+-.+-.+-.+-.+-.+-.+) judgment and (.+), being the highest.+to the said (.+),\s+at')
 
-    header = ['Parcel Number', 'Legal Description', 'APN', 'Owner Name Address', 'Date Sold', 'longitude', 'latitude', 'Situs Address','URL', 'Source', 'Page No.']
+    header = ['Date Sold', 'Parcel Number', 'Legal Description', 'APN', 'Owner Name Address', 'longitude', 'latitude', 'Situs Address','URL', 'Source', 'Page No.']
     
     csv_writer.writerows( [header] )
     
@@ -50,14 +50,15 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page, date
         #
         # x = ":".join("{:02x}".format(c) for c in bytearray( text, 'utf-8' ) )
         # print ( x ) 
+        # print ( text ) 
+
 
         if ret is not None:
             ret = ret.groups()
             ret = list( ret )
-        
-            del ret[4]
 
-            ret.append ( date_sold );
+        
+            del ret[5]
 
 #           api_info = address_api ( ret[2] )
 
@@ -79,11 +80,13 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page, date
 
             csv_writer.writerows( [ ret ]  )
         else:
-            print ('Could not process page ')
-            print ( page_number)
+            error_msg = 'Could not process page ' + str(page_number) 
+            print ( error_msg )
+
+            ret = [ error_msg ]
+            csv_writer.writerows( [ ret ]  )
 
     print ( 'Last page processed ')
-    print ( i );
 
 def address_api( p ):
 
@@ -118,7 +121,7 @@ def address_api( p ):
 
 pdf_end_page = 390
 
-strip_data( 'data/', 'K2012 Report of Sale', 2, pdf_end_page, '2013-08-28' )
+strip_data( 'data/', 'K2012 Report of Sale', 2, pdf_end_page )
 
 #strip_data( 'data/kc report of sale K2011/', 'kc report of sale vol. 1', 2, 10)
 #strip_data( 'data/kc report of sale K2011/', 'kc report of sale vol. 1-1', 2, 50)
