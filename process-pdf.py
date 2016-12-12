@@ -25,8 +25,10 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page ):
     
     if pdfReader.numPages < pdf_end_page:
         pdf_end_page = pdfReader.numPages
+
+#    parcelPattern = re.compile(r'on (.+), real.+PARCEL NUMBER: ([K0123456789-]*) LEGAL DESCRIPTION: (.+)(\d{2}-.+-.+-.+-.+-.+-.+-.+) judgment and (.+), being the highest.+to the said (.+),\s+at')
     
-    parcelPattern = re.compile(r'on (.+), real.+PARCEL NUMBER: ([K0123456789-]*) LEGAL DESCRIPTION: (.+)(\d{2}-.+-.+-.+-.+-.+-.+-.+) judgment and (.+), being the highest.+to the said (.+),\s+at')
+    parcelPattern = re.compile(r'on (.+), real.+PARCEL NUMBER: ([K0123456789-]*) LEGAL DESCRIPTION: (.+)(\d{2}-.+-.+-.+-.+-.+-.+-.+) was offered for sale in accordance with and subject to the terms and conditions of the judgment and (.+), being the highest.+to the said (.+),\s+at')
 
     header = ['Date Sold', 'Parcel Number', 'Legal Description', 'APN', 'Owner Name Address', 'longitude', 'latitude', 'Situs Address','URL', 'Source', 'Page No.']
     
@@ -34,7 +36,7 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page ):
     
     for i in range(pdf_start_page, pdf_end_page):
         pageObj = pdfReader.getPage(i)
-        page_number = i
+        page_offset = i
     
         text =  pageObj.extractText() 
     
@@ -56,17 +58,16 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page ):
         if ret is not None:
             ret = ret.groups()
             ret = list( ret )
-
         
             del ret[5]
 
-#           api_info = address_api ( ret[2] )
+            api_info = address_api ( ret[2] )
 
-#            if api_info is not None:
-#                api_info = list( api_info )
-#                longitude = api_info[0]
-#                latitude = api_info[1]
-#                single_line_address = api_info[2]
+            if api_info is not None:
+                api_info = list( api_info )
+                longitude = api_info[0]
+                latitude = api_info[1]
+                single_line_address = api_info[2]
 
             ret.append( longitude )
             ret.append( latitude )
@@ -76,11 +77,11 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page ):
 
             ret.append( pdf_file_name )
 
-            ret.append( page_number )
+            ret.append( page_offset + 1 )
 
             csv_writer.writerows( [ ret ]  )
         else:
-            error_msg = 'Could not process page ' + str(page_number) 
+            error_msg = 'Could not process page ' + str(page_offset + 1) 
             print ( error_msg )
 
             ret = [ error_msg ]
@@ -119,10 +120,15 @@ def address_api( p ):
         return longitude, latitude, single_line_address
 
 
-pdf_end_page = 390
+pdf_end_page = 108
 
-strip_data( 'data/', 'K2012 Report of Sale', 2, pdf_end_page )
+#strip_data( 'data/', 'K2012 Report of Sale', 2, pdf_end_page )
 
+#strip_data( './', 'OCR_kc report of sale vol. 1', 2, pdf_end_page )
+strip_data( 'data/PDFs/2014/', 'OCR_2014_KC 2 of 5', 0, 99 )
+
+
+# The following were not text
 #strip_data( 'data/kc report of sale K2011/', 'kc report of sale vol. 1', 2, 10)
 #strip_data( 'data/kc report of sale K2011/', 'kc report of sale vol. 1-1', 2, 50)
 #strip_data( 'data/kc report of sale K2011/', 'kc report of sale vol. 2', 2, 50)
