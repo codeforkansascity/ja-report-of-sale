@@ -10,12 +10,12 @@ def cleannone(val):
         val = '';
     return val
 
-def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page ):
-    pdf_file_name = pdf_file_path + pdf_base_name + '.pdf'
+def strip_data( format, out_file_name, pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page ):
+    pdf_file_name = pdf_file_path + pdf_base_name
 
     print ( 'Processing ' + pdf_file_name )
 
-    output_csv = open(pdf_base_name + '.csv', 'w')
+    output_csv = open( out_file_name, 'w')
     csv_writer = csv.writer(output_csv, dialect='excel')
     
     # K2012 Report of Sale.pdf     starts on page 3
@@ -27,8 +27,18 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page ):
         pdf_end_page = pdfReader.numPages
 
 #    parcelPattern = re.compile(r'on (.+), real.+PARCEL NUMBER: ([K0123456789-]*) LEGAL DESCRIPTION: (.+)(\d{2}-.+-.+-.+-.+-.+-.+-.+) judgment and (.+), being the highest.+to the said (.+),\s+at')
-    
-    parcelPattern = re.compile(r'on (.+), real.+PARCEL NUMBER: ([K0123456789-]*) LEGAL DESCRIPTION: (.+)(\d{2}-.+-.+-.+-.+-.+-.+-.+) was offered for sale in accordance with and subject to the terms and conditions of the judgment and (.+), being the highest.+to the said (.+),\s+at')
+
+    if format == 1:    
+        parcelPattern = re.compile(r'on (.+), real.+PARCEL NUMBER: ([K0123456789-]*) LEGAL DESCRIPTION: (.+)(\d{2}-.+-.+-.+-.+-.+-.+-.+) was offered for sale in accordance with and subject to the terms and conditions of the judgment and (.+), being the highest.+to the said (.+),\s+at')
+    elif format == 2:
+        parcelPattern = re.compile(r'on (.+), real.+PARCEL NUMBER: ([K0123456789-]*).+LEGAL DESCRIPTION:(.+)(\d{2}-.+-.+-.+-.+-.+-.+-.+) was offered for sale in.+judgment and (.+), being the ')
+    elif format == 3:
+        parcelPattern = re.compile(r'on (.+), real.+PARCEL NUMBER: ([K0123456789-]*).+LEGAL DESCRIPTION:(.+)(\d{2}-.+-.+-.+-.+-.+-.+-.+) was offered')
+
+
+    parcelPatternB = re.compile(r'on (.+), real.+PARCEL NUMBER: ([K0123456789-]*).+LEGAL DESCRIPTION:(.+)(\d{2}-.+-.+-.+-.+-.+-.+-.+) was offered')
+    parcelPatternC = re.compile(r'on (.+), real.+PARCEL NUMBER: ([K0123456789-]*).+LEGAL DESCRIPTION:(.+)was offered')
+    parcelPatternD = re.compile(r'on (.+), real.+PARCEL NUMBER: ([K0123456789-]*).+LEGAL DESCRIPTION:(.+)(\d{2}-.+) was offered')
 
     header = ['Date Sold', 'Parcel Number', 'Legal Description', 'APN', 'Owner Name Address', 'longitude', 'latitude', 'Situs Address','URL', 'Source', 'Page No.']
     
@@ -41,6 +51,7 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page ):
         text =  pageObj.extractText() 
     
         text =  text.replace(chr(10),' ') 
+        text =  text.replace('·','-') 
 
         ret = parcelPattern.search( text )
 
@@ -54,26 +65,57 @@ def strip_data( pdf_file_path, pdf_base_name, pdf_start_page, pdf_end_page ):
         # print ( x ) 
         # print ( text ) 
 
+        isb = 0
+
+        if ret is None:
+
+            ret = parcelPatternB.search( text )
+            isb = 1
+
+        if ret is None:
+
+            ret = parcelPatternC.search( text )
+            isb = 2
+
+        if ret is None:
+
+            ret = parcelPatternD.search( text )
+            isb = 3
 
         if ret is not None:
+
             ret = ret.groups()
             ret = list( ret )
-        
-            del ret[5]
 
-            api_info = address_api ( ret[2] )
 
-            if api_info is not None:
-                api_info = list( api_info )
-                longitude = api_info[0]
-                latitude = api_info[1]
-                single_line_address = api_info[2]
+            if isb == 1:
+                ret.append( '' )
+            elif isb == 2:
+                ret.append( '' )
+                ret.append( '' )
+            elif isb == 3:
+                ret.append( '' )
+            else:
+                del ret[5]
+
+            if ret[3] != '':
+
+                api_info = address_api ( ret[3] )
+
+                if api_info is not None:
+                    api_info = list( api_info )
+                    longitude = api_info[0]
+                    latitude = api_info[1]
+                    single_line_address = api_info[2]
 
             ret.append( longitude )
             ret.append( latitude )
             ret.append( single_line_address )
 
-            ret.append( 'http://maps.jacksongov.org/PropertyReport/propertyReport.cfm?pid=' + ret[2] )
+            if ret[3] != '':
+                ret.append( 'http://maps.jacksongov.org/PropertyReport/propertyReport.cfm?pid=' + ret[3] )
+            else:
+                ret.append( '' )
 
             ret.append( pdf_file_name )
 
@@ -122,15 +164,20 @@ def address_api( p ):
 
 pdf_end_page = 108
 
-#strip_data( 'data/', 'K2012 Report of Sale', 2, pdf_end_page )
 
-#strip_data( './', 'OCR_kc report of sale vol. 1', 2, pdf_end_page )
-strip_data( 'data/PDFs/2014/', 'OCR_2014_KC 2 of 5', 0, 99 )
+#strip_data(1,'K2011-1.csv', 'data/PDFs/2011/','kc report of sale vol. 1-ocr.pdf', 2, 109)
+#strip_data(1,'K2011-1-1.csv', 'data/PDFs/2011/','kc report of sale vol. 1-1 ocr.pdf', 0, 999)
+#strip_data(1,'K2011-2.csv', 'data/PDFs/2011/','kc report of sale vol. 2 - ocr.pdf', 0, 999)
+#strip_data(1,'K2011-2-2.csv', 'data/PDFs/2011/','kc report of sale vol. 2-1- ocr.pdf', 0, 42)
 
+#strip_data(1,'K2012.csv', 'data/PDFs/2012/','OCR_K2013 Report of Sale.pdf', 0, 389)
 
-# The following were not text
-#strip_data( 'data/kc report of sale K2011/', 'kc report of sale vol. 1', 2, 10)
-#strip_data( 'data/kc report of sale K2011/', 'kc report of sale vol. 1-1', 2, 50)
-#strip_data( 'data/kc report of sale K2011/', 'kc report of sale vol. 2', 2, 50)
-#strip_data( 'data/kc report of sale K2011/', 'kc report of sale vol. 2-1', 2, 50)
+#strip_data(1,'K2013-1.csv', 'data/PDFs/2013/','KC 1 of 5- ocr.pdf', 0, 999)
+#strip_data(1,'K2013-2.csv', 'data/PDFs/2013/','KC 2 of 5 -ocr.pdf', 0, 999)
+#strip_data(1,'K2013-3.csv', 'data/PDFs/2013/','KC 3 of 5 - ocr.pdf', 0, 999)
+#strip_data(1,'K2013-4.csv', 'data/PDFs/2013/','KC 4of 5- ocr.pdf', 0, 999)
+#### NO DATA strip_data(1,'K2013-5.csv', 'data/PDFs/2013/','KC of 5 of 5 and p.4 to 46 LAND TRUST - ocr.pdf', 2, 999)
+
+#strip_data(1,'K2015.csv', 'data/PDFs/2015/','OCR_2015_K-2015 REPORT OF SALE LAND TAX SUIT NO.pdf', 0, 423)
+strip_data(1,'OCR_3_K2015.csv', 'data/PDFs/2015/','OCR_3_K-2015 REPORT OF SALE LAND TAX SUIT NO.pdf', 0, 423)
 
