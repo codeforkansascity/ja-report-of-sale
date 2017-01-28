@@ -181,4 +181,4 @@ pdf_end_page = 108
 #strip_data(1,'K2015.csv', 'data/PDFs/2015/','OCR_2015_K-2015 REPORT OF SALE LAND TAX SUIT NO.pdf', 0, 423)
 #strip_data(1,'OCR_3_K2015.csv', 'data/PDFs/2015/','OCR_3_K-2015 REPORT OF SALE LAND TAX SUIT NO.pdf', 0, 423)
 
-strip_data(3,'K2014.csv', 'data/PDFs/2014/','OCR-K2014.pdf', 2, 438)
+strip_data(1,'K2014.csv', 'data/PDFs/2014/','Court Administrator\'s Report of Sale  K 2014 - ocr.pdf', 2, 438)
