@@ -74,6 +74,16 @@ def update_apn(infile, outfile):
     output_csv = open(outfile, 'w')
     csv_writer = csv.writer(output_csv)
 
+    header = ['Date Sold', 'Parcel Number', 'Legal Description', 'APN', 'Owner Name Address', 'longitude', 'latitude', 'Situs Address','URL', 'Source', 'Page No.']
+
+    csv_writer.writerows( [header] )
+
+    cnt = 0
+
+    print ( '------------------------------------------------------')
+    print ( infile + ' ' + outfile );
+    print ( '------------------------------------------------------')
+
     with open(infile, newline='') as csvfile:
         for row in csv.DictReader(csvfile):
 
@@ -81,13 +91,14 @@ def update_apn(infile, outfile):
 
             print ( row['APN'])
 
+            cnt = cnt + 1
+
             single_line_address = ''
-            longitude = ''
-            latitude = ''
-            neighborhood = ''
-            kiva_pin = ''
-            kiva_url = ''
-            apn = ''
+            longitude = row['longitude']
+            latitude = row['latitude']
+            url = row['URL']
+            source = row['Source']
+            address_error = ''
 
             api_info = address_api ( row[ 'APN' ]  )
 
@@ -105,7 +116,8 @@ def update_apn(infile, outfile):
                         single_line_address = api_info[2]
                     else:
                         print ( address + ' <> ' + county_address )
-                        single_line_address = 'ERROR ' + address + ' <> ' + county_address
+                        single_line_address = county_address
+                        address_error = 'ERROR ' + address + ' <> ' + county_address
 
 #            if api_info is not None:
 #                api_info = list( api_info )
@@ -129,18 +141,22 @@ def update_apn(infile, outfile):
             rec.append ( row[ 'URL' ] )
             rec.append ( row[ 'Source' ] )
             rec.append ( row[ 'Page No.' ] )
+            rec.append ( address_error )
 
 
             csv_writer.writerows( [ rec ]  )
 
-#update_apn('apn-added/K2011-1-1.csv','K2011-1-1.csv')
-#update_apn('apn-added/K2011-1.csv','K2011-1.csv')
-#update_apn('apn-added/K2011-2-2.csv','K2011-2-2.csv')
-#update_apn('apn-added/K2011-2.csv','K2011-2.csv')
-#update_apn('apn-added/K2012.csv','K2012.csv')
-#update_apn('apn-added/K2013-1.csv','K2013-1.csv')
-#update_apn('apn-added/K2013-2.csv','K2013-2.csv')
-#update_apn('apn-added/K2013-3.csv','K2013-3.csv')
-#update_apn('apn-added/K2013-4.csv','K2013-4.csv')
-update_apn('apn-added/K2015.csv','K2015.csv')
+    print ( ' ' )
+
+
+update_apn('apn-added/K2011-1-1.csv','K2011-1-1_v2.csv')
+update_apn('apn-added/K2011-1.csv','K2011-1_v2.csv')
+update_apn('apn-added/K2011-2-2.csv','K2011-2-2_v2.csv')
+update_apn('apn-added/K2011-2.csv','K2011-2_v2.csv')
+update_apn('apn-added/K2012.csv','K2012_v2.csv')
+update_apn('apn-added/K2013-1.csv','K2013-1_v2.csv')
+update_apn('apn-added/K2013-2.csv','K2013-2_v2.csv')
+update_apn('apn-added/K2013-3.csv','K2013-3_v2.csv')
+update_apn('apn-added/K2013-4.csv','K2013-4_v2.csv')
+update_apn('apn-added/K2015.csv','K2015_v2.csv')
 
